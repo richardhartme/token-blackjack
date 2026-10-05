@@ -1,0 +1,13 @@
+{
+  "name": "token-blackjack",
+  "owner": {
+    "name": "rhart"
+  },
+  "plugins": [
+    {
+      "name": "token-blackjack",
+      "source": "./",
+      "description": "Play blackjack with the tokens you use. /blackjack opens the table."
+    }
+  ]
+}

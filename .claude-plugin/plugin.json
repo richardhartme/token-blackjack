@@ -1,0 +1,10 @@
+{
+  "name": "token-blackjack",
+  "version": "0.1.0",
+  "description": "Play blackjack with the tokens you use. /blackjack opens the table.",
+  "types": "./types/index.d.ts",
+  "author": {
+    "name": "rhart",
+    "email": "richard@richardhart.me"
+  }
+}

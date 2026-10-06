@@ -32,8 +32,10 @@ const value = (hand: string[]): number => {
     if (rank === 'A') {
       aces += 1
       total += 11
+    } else if ('JQK'.includes(rank)) {
+      total += 10
     } else {
-      total += 'JQK'.includes(rank) ? 10 : Number(rank)
+      total += Number(rank)
     }
   }
 
@@ -46,39 +48,6 @@ const value = (hand: string[]): number => {
 }
 
 const show = (hand: string[]) => hand.join(' ')
-
-// The pot is kept in $.store; the state atom mirrors it for drawing.
-async function addToPot($: EngineInterface, delta: number) {
-  const stored = Number((await $.store.get('pot')) ?? 0)
-  const total = Math.max(0, Math.max(stored, await read($, pot)) + delta)
-  await $.store.set('pot', total)
-  await update($, pot, () => total)
-}
-
-
-async function finish($: EngineInterface, g: Game, outcome: 'win' | 'lose' | 'push' | 'fold' | 'blackjack', note: string) {
-  let delta = 0
-  let verdict = ''
-
-  if (outcome === 'win') {
-    delta = g.bet
-    verdict = `You win ${g.bet}!`
-  } else if (outcome === 'blackjack') {
-    delta = Math.floor(g.bet * 1.5)
-    verdict = `Blackjack! You win ${delta}!`
-  } else if (outcome === 'lose') {
-    delta = -g.bet
-    verdict = `You lose ${g.bet}.`
-  } else if (outcome === 'fold') {
-    delta = -Math.floor(g.bet / 2)
-    verdict = `You fold and lose ${-delta}.`
-  } else {
-    verdict = 'Push. Your bet is returned.'
-  }
-
-  await addToPot($, delta)
-  await update($, game, cur => ({ ...cur, phase: 'done', message: `${note} ${verdict}`.trim() }))
-}
 
 async function deal($: EngineInterface, bet: number) {
   const deck = newDeck()
@@ -146,6 +115,37 @@ async function fold($: EngineInterface) {
   await finish($, g, 'fold', '')
 }
 
+async function finish($: EngineInterface, g: Game, outcome: 'win' | 'lose' | 'push' | 'fold' | 'blackjack', note: string) {
+  let delta = 0
+  let verdict = ''
+
+  if (outcome === 'win') {
+    delta = g.bet
+    verdict = `You win ${g.bet}!`
+  } else if (outcome === 'blackjack') {
+    delta = Math.floor(g.bet * 1.5)
+    verdict = `Blackjack! You win ${delta}!`
+  } else if (outcome === 'lose') {
+    delta = -g.bet
+    verdict = `You lose ${g.bet}.`
+  } else if (outcome === 'fold') {
+    delta = -Math.floor(g.bet / 2)
+    verdict = `You fold and lose ${-delta}.`
+  } else {
+    verdict = 'Push. Your bet is returned.'
+  }
+
+  await addToPot($, delta)
+  await update($, game, cur => ({ ...cur, phase: 'done', message: `${note} ${verdict}`.trim() }))
+}
+
+// The pot is kept in $.store; the state atom mirrors it for drawing.
+async function addToPot($: EngineInterface, delta: number) {
+  const stored = Number((await $.store.get('pot')) ?? 0)
+  const total = Math.max(0, Math.max(stored, await read($, pot)) + delta)
+  await $.store.set('pot', total)
+  await update($, pot, () => total)
+}
 
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
